@@ -400,6 +400,11 @@ void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibling
 template <class _NodePtr, class _Tp, std::size_t M>
 const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 
+	// ✅ 트리가 비어있는 경우
+	if(__root == nullptr){
+		return nullptr;
+	}
+
 	std::pair<std::stack<_NodePtr>, bool> searchPathResult = searchPath<_NodePtr, _Tp, M>(__root, __key);
 	std::stack<_NodePtr> pathStack = searchPathResult.first;
 	bool searchValue = searchPathResult.second;
@@ -426,7 +431,7 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 		for(size_t i=0; i<x->__size_; i++){
 			if(x->__keys_[i] == __key){
 				index = i;
-				break; // ✅ 불필요한 반복 방지
+				break;
 			}
 	    }
 
@@ -459,7 +464,7 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 
 	deleteKey<_NodePtr, _Tp, M>(__root, x, __key);
 
-	// ✅ 루트 노드 하나만 있었고 그것을 삭제한 경우
+	// ✅ 루트 노드가 비어서 트리가 완전히 비게 된 경우
 	if(x == __root && x->__size_ == 0){
 		delete __root;
 		__root = nullptr;
@@ -489,7 +494,7 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 					y = pathStack.top();
 					pathStack.pop();
 				}else{
-					y = nullptr; // ✅ nullptr 명시적 설정
+					y = nullptr;
 					finished=true;
 				}
 			}
@@ -541,7 +546,10 @@ class BT {
 		}
 	
 	friend std::ostream& operator<<(std::ostream& os, const BT& tree) {
-		os << tree.__root_;
+		// ✅ 빈 트리인 경우 아무것도 출력하지 않음
+		if(tree.__root_ != nullptr) {
+			os << tree.__root_;
+		}
 		return os;
 	}
 };
