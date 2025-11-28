@@ -415,7 +415,17 @@ void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibling
 	deleteKey<_NodePtr, _Tp, M>(__root, y, y->__keys_[i-1]);
 
 
-	delete x;
+	// 여기 추가해야 memory leak이 해결된다!!
+    // 부모 y의 children 배열에서 x 제거
+    for (size_t k = i; k < y->__size_; k++) {
+        y->__children_[k] = y->__children_[k + 1];
+    }
+    y->__children_[y->__size_] = nullptr;
+    //  여기까지
+
+
+    // x 실제 삭제
+    delete x;
 }
 
 
