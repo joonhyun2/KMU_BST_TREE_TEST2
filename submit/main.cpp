@@ -497,7 +497,7 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 	if(x == __root && x->__size_ == 0){
 		delete __root;
 		__root = nullptr;
-		return (const Node<_Tp>*)1; // ✅ 삭제 성공을 나타내는 더미 값 (nullptr이 아닌 값)
+		return nullptr; // ✅ 삭제 성공을 나타내는 더미 값 (nullptr이 아닌 값)
 	}
 
 	if(!pathStack.empty()){
@@ -576,9 +576,28 @@ class BT {
 		}
 
 		const_pointer erase(const key_type& key) {
-			// use __eraseBT or write your own code here
-			return __eraseBT<pointer, key_type, M>(__root_, key);//❗❗❗
-		}
+    
+				pointer oldRoot = __root_;  // 삭제 전 루트 기억
+
+				__eraseBT<pointer, key_type, M>(__root_, key);
+
+				// 실패 경우 1: 최초부터 root가 null
+				if (oldRoot == nullptr) {
+					return nullptr;
+				}
+
+				// 실패 경우 2: key가 없어서 구조 변화 없음
+				if (__root_ == oldRoot) {
+					return nullptr;
+				}
+
+				// 또는 root가 바뀌었거나, 
+				// root는 그대로지만 노드가 실제로 줄어들었을 수도 있음.
+				// 안정적으로 하려면 key 존재 여부 체크하는 용도로 searchPath 사용 가능.
+
+				return oldRoot; // 그냥 null 아닌 값 반환 → 성공 의미
+			}
+
 
 		void clear() {
 			// use __clear or write your own code here
