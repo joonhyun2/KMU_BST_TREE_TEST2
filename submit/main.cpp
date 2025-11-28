@@ -493,7 +493,12 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 
 	deleteKey<_NodePtr, _Tp, M>(__root, x, __key);
 
-
+	// 수정4
+	if(x == __root && x->__size_ == 0){
+		delete __root;
+		__root = nullptr;
+		return __root; // ✅ 삭제 성공을 나타내는 더미 값 (nullptr이 아닌 값)
+	}
 
 	if(!pathStack.empty()){
 		y = pathStack.top();
@@ -531,7 +536,7 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 	if(y != nullptr && y->__size_ == 0) {
     __root = y->__children_[0];
     delete y;
-	}*/
+}*/
 		if(__root != nullptr && __root->__size_ == 0){
 		_NodePtr oldRoot = __root;
 		__root = __root->__children_[0];  // child를 새 root로
@@ -571,8 +576,19 @@ class BT {
 		}
 
 		const_pointer erase(const key_type& key) {
-			// use __eraseBT or write your own code here
-			return __eraseBT<pointer, key_type, M>(__root_, key);//❗❗❗
+
+			pointer beforeRoot = __root_;                    // 삭제 전 root 기록
+			const_pointer result = __eraseBT(__root_, key);  // 삭제 시도
+			pointer afterRoot = __root_;                     // 삭제 후 root 기록
+
+			// 1) 삭제 실패하는 경우 (key 없음)
+			if (beforeRoot == afterRoot && result == nullptr) {
+				return nullptr;  // 실패
+			}
+
+			// 2) 삭제 성공한 경우
+			return afterRoot;  // 성공이면 root 반환(비어 있을 경우 nullptr)
+
 		}
 
 		void clear() {
