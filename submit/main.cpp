@@ -453,6 +453,7 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 		for(size_t i=0; i<x->__size_; i++){
 			if(x->__keys_[i] == __key){
 				index = i;
+				break;
 			}
 	    }
 
@@ -515,6 +516,7 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 					y = pathStack.top();
 					pathStack.pop();
 				}else{
+					y = nullptr;
 					finished=true;
 				}
 			}
@@ -522,8 +524,9 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 	}while(!finished);
 
 	if(y!=nullptr && y->__size_==0){
-		__root = y->__children_[0];
-		delete y;
+		_NodePtr oldRoot = __root;
+		__root = __root->__children_[0];
+		delete oldRoot;
 	}
 
 	return __root;
