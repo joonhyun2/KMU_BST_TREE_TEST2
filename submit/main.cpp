@@ -423,7 +423,10 @@ void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibling
 template <class _NodePtr, class _Tp, std::size_t M>
 const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 
-    
+		// 수정2
+		if(__root == nullptr){
+			return nullptr;
+		}
 
 	std::pair<std::stack<_NodePtr>, bool> searchPathResult = searchPath<_NodePtr, _Tp, M>(__root, __key);
 	std::stack<_NodePtr> pathStack = searchPathResult.first;
@@ -453,6 +456,7 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 		for(size_t i=0; i<x->__size_; i++){
 			if(x->__keys_[i] == __key){
 				index = i;
+				break; //수정3
 			}
 	    }
 
@@ -489,6 +493,13 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 
 	deleteKey<_NodePtr, _Tp, M>(__root, x, __key);
 
+	// 수정4
+	if(x == __root && x->__size_ == 0){
+		delete __root;
+		__root = nullptr;
+		return (const Node<_Tp>*)0x1; // ✅ 삭제 성공을 나타내는 더미 값 (nullptr이 아닌 값)
+	}
+
 	if(!pathStack.empty()){
 		y = pathStack.top();
 		pathStack.pop();
@@ -519,13 +530,13 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 				}
 			}
 		}
-	}while(!finished);
+	}while(!finished); // 수정1
 
-	if(__root != nullptr && __root->__size_ == 0){
-    _NodePtr oldRoot = __root;
-    __root = __root->__children_[0];  // child를 새 root로
-    delete oldRoot;                    // old root 해제
-}
+		if(__root != nullptr && __root->__size_ == 0){
+		_NodePtr oldRoot = __root;
+		__root = __root->__children_[0];  // child를 새 root로
+		delete oldRoot;                    // old root 해제
+	}
 
 	return __root;
 }
