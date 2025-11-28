@@ -1,4 +1,4 @@
-/*//
+/*
 * File Processing Report 2024 - Balanced Tree skeleton code in C/C++
 *
 * 본 Skeleton code는 구현에 도움을 주기 위해 작성된 코드입니다.
@@ -29,7 +29,7 @@ class Node {
 		__node_pointer	__children_[M];
 		size_type		__size_;
 	
-	public: // Constructor
+	public: // Constructor //❗❗
 		// ✅ 기본 생성자 (필수)
     Node() {
         __size_ = 0;
@@ -61,7 +61,7 @@ class Node {
 			__children_[size() + 1] = __np;
 			++size();
 		}
-		__key_type __pop_front() {
+		__key_type __pop_front() {//❗❗수정
 			const __key_type __ret = __keys_[0];
 			
 			for (size_type __i = 0; __i < __size_ - 1; ++__i) {
@@ -131,7 +131,7 @@ void __inorder(_NodePtr __x) {
 	std::cout << __x->__children_[__x->size()];
 	std::cout << '>';
 
-	return ;
+	return ; // ❗❗수정함
 }
 
 // Dangling pointer를 방지하기 위해 __x를 참조 타입으로 받도록 설계하였습니다.
@@ -147,14 +147,13 @@ void __clear(_NodePtr& __x) {
 	delete __x;
 	__x = nullptr;
 }
-
 template <class _NodePtr, class _Tp, std::size_t M>
 std::pair<std::stack<_NodePtr>, bool> searchPath(_NodePtr& __root, const _Tp& __key){
 	_NodePtr x = __root;
 	std::stack<_NodePtr> path;
 	std::size_t i = 0;
-	
-	do{
+	// x = __root 가 nullptr인 경우는 없음
+	do{ //❗❗ while - do로 바꿔야할수도 있음
 		i=0;
 		while( i<=x->__size_-1 && __key>x->__keys_[i])
 		{
@@ -163,9 +162,12 @@ std::pair<std::stack<_NodePtr>, bool> searchPath(_NodePtr& __root, const _Tp& __
 		if( i<= x->__size_-1 && __key==x->__keys_[i]){
 			path.push(x);
 			return std::pair<std::stack<_NodePtr>, bool>(path,  true);
+
 		}
 
 		path.push(x);
+
+		
 		x=x->__children_[i];
 
 	} while(x!=nullptr);
@@ -175,8 +177,9 @@ std::pair<std::stack<_NodePtr>, bool> searchPath(_NodePtr& __root, const _Tp& __
 
 template <class _NodePtr, class _Tp, std::size_t M>
 void insertKey(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp __key){
-    (void)__root;
-	int i = x->__size_-1;
+    (void)__root;//❗❗❗
+// y : 전 단계에서 분할한 노드 (첫 단계에서는 null)
+	int i = x->__size_-1; // key의 인덱스 값: 최대 1
 	while(i>=0 && __key<x->__keys_[i]){
 		x->__keys_[i+1]=x->__keys_[i];
 		x->__children_[i+2]=x->__children_[i+1];
@@ -190,8 +193,8 @@ void insertKey(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp __key){
 
 template <class _NodePtr, class _Tp, std::size_t M>
 std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp __key){
-    (void)__root;
-	int size = x->__size_+1;
+    (void)__root;//❗❗❗
+	int size = x->__size_+1; // 새로운 tempNode의 키의 개수 4
 	
 	_NodePtr tempChildren[5];
 	_Tp tempKeys[4];
@@ -203,7 +206,7 @@ std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp
 		tempChildren[i]=x->__children_[i];
 	}
 
-	int j = x->__size_-1;
+	int j = x->__size_-1; // 이때 j는 2, __size_는 3
 	while(j>=0 && __key<tempKeys[j]){
 		tempKeys[j+1] = tempKeys[j];
 		tempChildren[j+2] = tempChildren[j+1];
@@ -212,12 +215,14 @@ std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp
 	tempKeys[j+1]=__key;
 	tempChildren[j+2]=y;
 
-	int center = size/2;
+	int center = size/2; //size에 따라 값이 바뀜.
 	_Tp centerKey = tempKeys[center];
+
+	//////////////////////////////////////////////
 
 	int k=0;
 	x->__size_ = 0;
-	while(k < center){
+	while(k < center){ // ❗❗❗동일한 키가 있다면 : 수정함
 		x->__keys_[k] = tempKeys[k];
 		x->__children_[k] = tempChildren[k];
 		k++;
@@ -226,9 +231,9 @@ std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp
 	x->__children_[k] = tempChildren[k];
 
 	_NodePtr newNode = new Node<_Tp, M>();
-	k=center+1;
+	k=center+1;// ❗ 수정함 수도 코드랑비교 필요
 
-	while(k<size){
+	while(k<size){ // size = 4;
 		newNode->__keys_[newNode->__size_] = tempKeys[k];
 		newNode->__children_[newNode->__size_] = tempChildren[k];
 		k++;
@@ -240,9 +245,10 @@ std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp
 }
 
 template <class _NodePtr, class _Tp, std::size_t M>
-std::pair<const Node<_Tp>*, bool> __insertBT(_NodePtr& __root, const _Tp& __key) {
+std::pair<const Node<_Tp>*, bool> __insertBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 
 	_Tp keyCopy = __key; 
+
 
 	if (__root == nullptr) {
 		__root = new Node<_Tp, M>(__key);
@@ -256,13 +262,14 @@ std::pair<const Node<_Tp>*, bool> __insertBT(_NodePtr& __root, const _Tp& __key)
 	if(result) 
 		return std::make_pair(nullptr, false);
 
+
 	bool finished = false;
-	_NodePtr x = pathStack.top();
+	_NodePtr x = pathStack.top(); // 체크하는 노드
 	pathStack.pop();
-	_NodePtr y = nullptr;
+	_NodePtr y = nullptr;  // 오버플로우로 인한 노드 분할로 새로 생성되는 노드
 
 	do{
-		if(x->__size_ < 3){
+		if(x->__size_ < 3){ //❗❗일반화 안 함
 			insertKey<_NodePtr, _Tp, M>(__root, x, y, keyCopy);
 			finished = true;
 		}else{
@@ -274,7 +281,7 @@ std::pair<const Node<_Tp>*, bool> __insertBT(_NodePtr& __root, const _Tp& __key)
 			{
 				x=pathStack.top();
 				pathStack.pop();
-			}else{
+			}else{ // 마지막 노드임
 				__root = new Node<_Tp, M>();
 				__root->__keys_[0]=keyCopy;
 				__root->__children_[0]=x;
@@ -284,35 +291,38 @@ std::pair<const Node<_Tp>*, bool> __insertBT(_NodePtr& __root, const _Tp& __key)
 			}
 		}
 	}while(!finished);
-	return std::make_pair(__root, true);
+	return std::make_pair(__root, true); //루트를 반환
+
+
 }
 
 template <class _NodePtr, class _Tp, std::size_t M>
 void deleteKey(_NodePtr& __root, _NodePtr x, _Tp __key){
-    (void)__root;
+    (void)__root;//❗❗
 	std::size_t i = 0;
 
-	while(i < x->__size_ && static_cast<int>(__key) > static_cast<int>(x->__keys_[i]))
+	while(i < x->__size_ && static_cast<int>(__key) > static_cast<int>(x->__keys_[i]))//❗❗ 나중에 수정하기c
 	{
 		i++;
 	}
 
-	if (i >= x->__size_ || static_cast<int>(x->__keys_[i]) != static_cast<int>(__key)) {
+	if (i >= x->__size_ || static_cast<int>(x->__keys_[i]) != static_cast<int>(__key)) { //❗❗ 나중에 수정하기
         return;     
-    }
+    }//❗❗ 나중에 수정하기
 
 	while(i<x->__size_){
 		x->__keys_[i] = x->__keys_[i+1];
 		x->__children_[i+1]=x->__children_[i+2];
 		i++;
 	}
+	//여기다가 한줄추가하면 되는거 아닌가
 	x->__children_[x->__size_]=nullptr;
 	x->__size_ = x->__size_-1;
 }
 
 template <class _NodePtr>
 int bestSibling(_NodePtr& __root, _NodePtr x, _NodePtr y){
-    (void)__root;
+    (void)__root;//❗❗
 	std::size_t i = 0;
     std::size_t index = 0;
 	
@@ -332,7 +342,6 @@ int bestSibling(_NodePtr& __root, _NodePtr x, _NodePtr y){
 
 	return index;
 }
-
 template <class _NodePtr, class _Tp, std::size_t M>
 void redistribute(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSiblingIndex){
 
@@ -342,10 +351,11 @@ void redistribute(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibl
 	}
 	_NodePtr bestNode = y->__children_[bestSiblingIndex];
 
-	if(bestSiblingIndex< static_cast<std::size_t>(i) ){
+
+	if(bestSiblingIndex< static_cast<std::size_t>(i) ){ //❗❗
 		_Tp lastKey = bestNode->__keys_[bestNode->__size_-1];
-		insertKey<_NodePtr, _Tp, M>(__root, x, (_NodePtr)nullptr, y->__keys_[i-1]);
-		x->__children_[1]=x->__children_[0];
+		insertKey<_NodePtr, _Tp, M>(__root, x, (_NodePtr)nullptr, y->__keys_[i-1]);//❗❗
+		x->__children_[1]=x->__children_[0]; //❗❗❗넣어야하나?
 		x->__children_[0]=bestNode->__children_[bestNode->__size_];
 		bestNode->__children_[bestNode->__size_]=nullptr;
 		deleteKey<_NodePtr, _Tp, M>(__root, bestNode, lastKey);
@@ -359,7 +369,6 @@ void redistribute(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibl
 		y->__keys_[i]=firstKey;
 	}
 }
-
 template <class _NodePtr, class _Tp, std::size_t M>
 void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSiblingIndex){
 
@@ -367,22 +376,32 @@ void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibling
 	while(y->__children_[i]!=x){
 		i++;
 	}
+    
 
 	_NodePtr bestNode = y->__children_[bestSiblingIndex];
 
-	if(bestSiblingIndex>static_cast<std::size_t>(i)){
+
+
+	if(bestSiblingIndex>static_cast<std::size_t>(i)){ //❗❗❗
+		// x <-> bestNode 교환
         _NodePtr tempNode = x;
         x = bestNode;
         bestNode = tempNode;
 
+        // i <-> bestSiblingIndex 교환
         std::size_t tempIndex = i;
         i = bestSiblingIndex;
         bestSiblingIndex = tempIndex;
 	}
+    
+
+
+    //오른쪽 sibling 을 x에다가 넣는 코드
 
 	bestNode->__keys_[bestNode->__size_] = y->__keys_[i-1];
 	bestNode->__size_ = bestNode->__size_+1;
 	std::size_t j = 0;
+
 
 	while(j<x->__size_){
 		bestNode->__keys_[bestNode->__size_] = x->__keys_[j];
@@ -391,31 +410,32 @@ void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibling
 		j++;
 	}
 	bestNode->__children_[bestNode->__size_] = x->__children_[x->__size_];
+    
 
 	deleteKey<_NodePtr, _Tp, M>(__root, y, y->__keys_[i-1]);
 
-    delete x; // ✅ 메모리 해제
+
+    // x 실제 삭제
+    delete x;
 }
 
-template <class _NodePtr, class _Tp, std::size_t M>
-const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 
-	// ✅ 트리가 비어있는 경우
-	if(__root == nullptr){
-		return nullptr;
-	}
+template <class _NodePtr, class _Tp, std::size_t M>
+const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
+
+    
 
 	std::pair<std::stack<_NodePtr>, bool> searchPathResult = searchPath<_NodePtr, _Tp, M>(__root, __key);
 	std::stack<_NodePtr> pathStack = searchPathResult.first;
 	bool searchValue = searchPathResult.second;
 
 	if(searchValue==false){
+        
         return nullptr;
     }
-    
 	_NodePtr x = pathStack.top();
 	_NodePtr y = nullptr;
- 	pathStack.pop();
+ 	pathStack.pop(); //❗❗수정?
 
 	bool keyInTerminal = true;
 	for(size_t i=0; i<x->__size_+1; i++){
@@ -425,13 +445,14 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 		}
 	}
 
+    // 여기서 문제 발생!!
 	if(!keyInTerminal){
+        
 		_NodePtr internalNode = x;
 		size_t index = 0;
 		for(size_t i=0; i<x->__size_; i++){
 			if(x->__keys_[i] == __key){
 				index = i;
-				break;
 			}
 	    }
 
@@ -454,22 +475,19 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 
 		x = pathStack.top();
 		pathStack.pop();
-
+		//❗❗수정??
 		_Tp tempKey = internalNode->__keys_[index];
 		internalNode->__keys_[index] = x->__keys_[0];
 		x->__keys_[0]=tempKey;
-	}
+	} // pathStack은 leafNode까지의 경로
+	
+	
 
+	
 	bool finished = false;
 
-	deleteKey<_NodePtr, _Tp, M>(__root, x, __key);
 
-	// ✅ 루트 노드가 비어서 트리가 완전히 비게 된 경우
-	if(x == __root && x->__size_ == 0){
-		delete __root;
-		__root = nullptr;
-		return (const Node<_Tp>*)0x1; // ✅ 삭제 성공을 나타내는 더미 값 (nullptr이 아닌 값)
-	}
+	deleteKey<_NodePtr, _Tp, M>(__root, x, __key);
 
 	if(!pathStack.empty()){
 		y = pathStack.top();
@@ -477,12 +495,15 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 	}
 
 	do{
-		if(x==__root || x->__size_ >= 1){
+		if(x==__root || x->__size_ >= 1){ // isRoot 함수 적용해야하나???? // ❗❗하드 코딩 됨
 			finished = true;
 		}else{
-			std::size_t bestSiblingIndex = bestSibling(__root, x, y);
+			std::size_t bestSiblingIndex = bestSibling(__root, x, y); //❗❗
+			// x: underflow 발생한 노드
+			// y: x의 부모 노드
+			// bestSibling: x 형제 노드의 인덱스
 
-			if(y->__children_[bestSiblingIndex]->__size_ > 1)
+			if(y->__children_[bestSiblingIndex]->__size_ > 1)// ❗❗하드 코딩 됨
 			{
 				redistribute<_NodePtr, _Tp, M>(__root, x, y, bestSiblingIndex);
 				finished=true;
@@ -494,22 +515,21 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 					y = pathStack.top();
 					pathStack.pop();
 				}else{
-					y = nullptr;
 					finished=true;
 				}
 			}
 		}
 	}while(!finished);
 
-	// ✅ 루트가 비어있을 때 메모리 누수 방지
 	if(__root != nullptr && __root->__size_ == 0){
-		_NodePtr oldRoot = __root;
-		__root = __root->__children_[0];
-		delete oldRoot;
-	}
+    _NodePtr oldRoot = __root;
+    __root = __root->__children_[0];  // child를 새 root로
+    delete oldRoot;                    // old root 해제
+}
 
 	return __root;
 }
+
 
 // 아래는 반드시 사용해야하는 BT 클래스입니다.
 template <class _Tp, std::size_t M = 4>
@@ -528,32 +548,44 @@ class BT {
 	
 	public: // Lookup
 		void inorder() const {
+			// use __inorder or write your own code here
 			__inorder(__root_);
 			std::cout << std::endl;
 		}
 
 	public: // Modifier
 		std::pair<const_pointer, bool> insert(const key_type& key) {
-			return __insertBT<pointer, key_type, M>(__root_, key);
+			// use __insertBT or write your own code here
+			return __insertBT<pointer, key_type, M>(__root_, key);//❗❗❗
 		}
 
 		const_pointer erase(const key_type& key) {
-			return __eraseBT<pointer, key_type, M>(__root_, key);
+			// use __eraseBT or write your own code here
+			return __eraseBT<pointer, key_type, M>(__root_, key);//❗❗❗
 		}
 
 		void clear() {
+			// use __clear or write your own code here
 			__clear(__root_);
 		}
 	
+	/*
+	* 아래는 inorder traversal을 대체할 수 있는 operator<< 입니다.
+	* 반드시 아래의 함수를 사용해야할 필요는 없습니다.
+	*/
 	friend std::ostream& operator<<(std::ostream& os, const BT& tree) {
-		// ✅ 빈 트리인 경우 아무것도 출력하지 않음
-		if(tree.__root_ != nullptr) {
-			os << tree.__root_;
-		}
+		os << tree.__root_;
 		return os;
 	}
 };
 
+
+
+/*
+* 아래는 추천드리는 main 함수의 예시입니다.
+* 반드시 아래의 main 함수를 사용해야할 필요는 없습니다.
+* ❗️새로 구현하실 경우, 출력 형식에 주의하세요.❗️
+*/
 int main() {
 	BT<int>	tree;
 	char	command;
@@ -581,6 +613,7 @@ int main() {
 		std::cout << tree << std::endl;
 	}
 
+	// 프로그램 종료 전, 메모리 누수가 발생하지 않도록 할당받은 메모리를 반드시 해제해야 합니다.
 	tree.clear();
 
 	return (0);
