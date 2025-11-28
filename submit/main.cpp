@@ -486,19 +486,14 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 	} // pathStack은 leafNode까지의 경로
 	
 	
-
+ 
 	
 	bool finished = false;
 
 
 	deleteKey<_NodePtr, _Tp, M>(__root, x, __key);
 
-	// 수정4
-	if(x == __root && x->__size_ == 0){
-		delete __root;
-		__root = nullptr;
-		return (const Node<_Tp>*)0x1; // ✅ 삭제 성공을 나타내는 더미 값 (nullptr이 아닌 값)
-	}
+
 
 	if(!pathStack.empty()){
 		y = pathStack.top();
@@ -532,6 +527,11 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 		}
 	}while(!finished); // 수정1
 
+	/*
+	if(y != nullptr && y->__size_ == 0) {
+    __root = y->__children_[0];
+    delete y;
+	}*/
 		if(__root != nullptr && __root->__size_ == 0){
 		_NodePtr oldRoot = __root;
 		__root = __root->__children_[0];  // child를 새 root로
