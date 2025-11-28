@@ -468,7 +468,7 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 	if(x == __root && x->__size_ == 0){
 		delete __root;
 		__root = nullptr;
-		return nullptr;
+		return (const Node<_Tp>*)0x1; // ✅ 삭제 성공을 나타내는 더미 값 (nullptr이 아닌 값)
 	}
 
 	if(!pathStack.empty()){
