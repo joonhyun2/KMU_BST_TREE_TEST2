@@ -1,4 +1,4 @@
-/*
+/*//
 * File Processing Report 2024 - Balanced Tree skeleton code in C/C++
 *
 * 본 Skeleton code는 구현에 도움을 주기 위해 작성된 코드입니다.
