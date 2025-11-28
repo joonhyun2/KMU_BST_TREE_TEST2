@@ -415,8 +415,15 @@ void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibling
 	deleteKey<_NodePtr, _Tp, M>(__root, y, y->__keys_[i-1]);
 
 
-    // x 실제 삭제
-    delete x;
+			// 🔥🔥🔥 여기에 추가!! 부모 y의 children 배열에서 x 제거
+		for (size_t k = i; k < y->__size_; k++) {
+			y->__children_[k] = y->__children_[k + 1];
+		}
+		y->__children_[y->__size_] = nullptr;
+		// 🔥🔥🔥 여기까지 추가!!
+
+		// x 실제 삭제
+		delete x;
 }
 
 
@@ -453,33 +460,23 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 		for(size_t i=0; i<x->__size_; i++){
 			if(x->__keys_[i] == __key){
 				index = i;
-				break;
 			}
 	    }
 
-        pathStack.push(x);
+				// 🔥 내부 노드 삭제 시: 부모 역할을 유지하기 위해 반드시 internalNode push
+			pathStack.push(internalNode);
 
-        std::pair<std::stack<_NodePtr>, bool> searchPathResult2 = searchPath<_NodePtr, _Tp, M>(x->__children_[index+1], x->__keys_[index]);
-		std::stack<_NodePtr> pathStack2 = searchPathResult2.first;
-		std::stack<_NodePtr> tmpStack;
-		while(!pathStack2.empty()){
-			_NodePtr value =pathStack2.top();
-			pathStack2.pop(); 
-			tmpStack.push(value);
-		}
+			// 오른쪽 서브트리의 최소값과 swap
+			_NodePtr leaf = x->__children_[index+1];
+			while (leaf->__children_[0] != nullptr) {
+				leaf = leaf->__children_[0];
+			}
 
-		while(!tmpStack.empty()){
-			_NodePtr value =tmpStack.top();
-			tmpStack.pop(); 
-			pathStack.push(value);
-		}
+			_Tp tempKey = internalNode->__keys_[index];
+			internalNode->__keys_[index] = leaf->__keys_[0];
+			leaf->__keys_[0] = tempKey;
 
-		x = pathStack.top();
-		pathStack.pop();
-		//❗❗수정??
-		_Tp tempKey = internalNode->__keys_[index];
-		internalNode->__keys_[index] = x->__keys_[0];
-		x->__keys_[0]=tempKey;
+			x = leaf;  // 실제 삭제는 leaf에서 진행
 	} // pathStack은 leafNode까지의 경로
 	
 	
@@ -516,7 +513,6 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 					y = pathStack.top();
 					pathStack.pop();
 				}else{
-					y = nullptr;
 					finished=true;
 				}
 			}
@@ -524,9 +520,8 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 	}while(!finished);
 
 	if(y!=nullptr && y->__size_==0){
-		_NodePtr oldRoot = __root;
-		__root = __root->__children_[0];
-		delete oldRoot;
+		__root = y->__children_[0];
+		delete y;
 	}
 
 	return __root;
