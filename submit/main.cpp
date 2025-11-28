@@ -459,6 +459,13 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 
 	deleteKey<_NodePtr, _Tp, M>(__root, x, __key);
 
+	// ✅ 루트 노드 하나만 있었고 그것을 삭제한 경우
+	if(x == __root && x->__size_ == 0){
+		delete __root;
+		__root = nullptr;
+		return nullptr;
+	}
+
 	if(!pathStack.empty()){
 		y = pathStack.top();
 		pathStack.pop();
