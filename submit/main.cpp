@@ -189,7 +189,7 @@ std::pair<std::stack<_NodePtr>, bool> searchPath(_NodePtr& __root, const _Tp& __
 // x에 key값을 삽입한다.
 template <class _NodePtr, class _Tp, std::size_t M>
 void insertKey(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp __key){
-    
+    (void)__root; // 루트는 쓰이지 않기에 컴파일 경고를 방지하고 위해 작성함.
 	int i = x->__size_-1; 
 	// 삽입 위치를 아래와 같이 기존 key를 오른쪽으로 이동하면서 찾는다.
 	while(i>=0 && __key<x->__keys_[i]){
@@ -203,14 +203,17 @@ void insertKey(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp __key){
 	x->__size_=x->__size_+1;
 }
 
+
 template <class _NodePtr, class _Tp, std::size_t M>
 std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp __key){
-    (void)__root;//❗❗❗
-	int size = x->__size_+1; // 새로운 tempNode의 키의 개수 4
+    (void)__root;// 루트는 쓰이지 않기에 컴파일 경고를 방지하고 위해 작성함.
+	int size = x->__size_+1; 
 	
-	_NodePtr tempChildren[5];
-	_Tp tempKeys[4];
+	_NodePtr tempChildren[M+1];
+	_Tp tempKeys[M];
 
+
+	// 임시 배열에 기존 키 값과 자식 포인터 값을 저장한다.
 	for(size_t i = 0; i<x->__size_; i++){
 		tempKeys[i]=x->__keys_[i];
 	}
@@ -218,7 +221,8 @@ std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp
 		tempChildren[i]=x->__children_[i];
 	}
 
-	int j = x->__size_-1; // 이때 j는 2, __size_는 3
+	int j = x->__size_-1; 
+	// key값을 임시 배열에 삽입한다.
 	while(j>=0 && __key<tempKeys[j]){
 		tempKeys[j+1] = tempKeys[j];
 		tempChildren[j+2] = tempChildren[j+1];
@@ -227,14 +231,14 @@ std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp
 	tempKeys[j+1]=__key;
 	tempChildren[j+2]=y;
 
-	int center = size/2; //size에 따라 값이 바뀜.
+	int center = size/2; // 가운데 키 값
 	_Tp centerKey = tempKeys[center];
 
-	//////////////////////////////////////////////
+
 
 	int k=0;
 	x->__size_ = 0;
-	while(k < center){ // ❗❗❗동일한 키가 있다면 : 수정함
+	while(k < center){ // 가운데 키 왼쪽 부분을 노드 x에 넣는다.
 		x->__keys_[k] = tempKeys[k];
 		x->__children_[k] = tempChildren[k];
 		k++;
@@ -243,9 +247,9 @@ std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp
 	x->__children_[k] = tempChildren[k];
 
 	_NodePtr newNode = new Node<_Tp, M>();
-	k=center+1;// ❗ 수정함 수도 코드랑비교 필요
+	k=center+1;
 
-	while(k<size){ // size = 4;
+	while(k<size){ // 가운데 키 오른쪽 부분을 새 노드에 넣는다.
 		newNode->__keys_[newNode->__size_] = tempKeys[k];
 		newNode->__children_[newNode->__size_] = tempChildren[k];
 		k++;
@@ -256,13 +260,14 @@ std::pair<_Tp, _NodePtr> splitNode(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp
 	return std::make_pair(centerKey, newNode);
 }
 
+// 트리에 key를 넣고 루트 포인터 + 성공 여부를 반환한다.
 template <class _NodePtr, class _Tp, std::size_t M>
 std::pair<const Node<_Tp>*, bool> __insertBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 
 	_Tp keyCopy = __key; 
 
 
-	if (__root == nullptr) {
+	if (__root == nullptr) { // 트리가 처음부터 없을 시에 새로운 루트 생성
 		__root = new Node<_Tp, M>(__key);
 		return std::make_pair(__root, true);
 	}
@@ -276,24 +281,27 @@ std::pair<const Node<_Tp>*, bool> __insertBT(_NodePtr& __root, const _Tp& __key)
 
 
 	bool finished = false;
-	_NodePtr x = pathStack.top(); // 체크하는 노드
+	_NodePtr x = pathStack.top(); // 삽입하는 리프 노드
 	pathStack.pop();
 	_NodePtr y = nullptr;  // 오버플로우로 인한 노드 분할로 새로 생성되는 노드
 
 	do{
-		if(x->__size_ < 3){ //❗❗일반화 안 함
+		if(x->__size_ < M - 1){ //node에 여유 공간이 있다면 key를 넣는다.
 			insertKey<_NodePtr, _Tp, M>(__root, x, y, keyCopy);
 			finished = true;
 		}else{
+			// 공간이 꽉 찼다면 splitNode실행한다.
 			std::pair<_Tp, _NodePtr> splitNodeResult = splitNode<_NodePtr, _Tp, M>(__root, x, y, keyCopy);
+			// 중앙 키 값은 부모에 넣을 값이다
 			keyCopy = splitNodeResult.first;
 			_NodePtr newNode = splitNodeResult.second;
 			y = newNode;
-			if(!pathStack.empty())
+
+			if(!pathStack.empty()) //부모 노드에서 삽입을 계속 진행한다.
 			{
 				x=pathStack.top();
 				pathStack.pop();
-			}else{ // 마지막 노드임
+			}else{ // 최상위 노드에서 splitNode가 발생하면 새로운 루트를 생성한다.
 				__root = new Node<_Tp, M>();
 				__root->__keys_[0]=keyCopy;
 				__root->__children_[0]=x;
@@ -308,11 +316,12 @@ std::pair<const Node<_Tp>*, bool> __insertBT(_NodePtr& __root, const _Tp& __key)
 
 }
 
+// x노드에서 __key값을 삭제한다.
 template <class _NodePtr, class _Tp, std::size_t M>
 void deleteKey(_NodePtr& __root, _NodePtr x, _Tp __key){
-    (void)__root;//❗❗
+    (void)__root;
 	std::size_t i = 0;
-
+	// 삭제하는 키의 위치 구하기
 	while(i < x->__size_ && static_cast<int>(__key) > static_cast<int>(x->__keys_[i]))//❗❗ 나중에 수정하기c
 	{
 		i++;
@@ -320,40 +329,43 @@ void deleteKey(_NodePtr& __root, _NodePtr x, _Tp __key){
 
 	if (i >= x->__size_ || static_cast<int>(x->__keys_[i]) != static_cast<int>(__key)) { //❗❗ 나중에 수정하기
         return;     
-    }//❗❗ 나중에 수정하기
+    }// 삭제하려는 key가 없다면 종료한다.
 
+	//키와 자식 포인터를 한칸씩 왼쪽으로 이동.
 	while(i<x->__size_){
 		x->__keys_[i] = x->__keys_[i+1];
 		x->__children_[i+1]=x->__children_[i+2];
 		i++;
 	}
-	//여기다가 한줄추가하면 되는거 아닌가
+	//마지막 자식 포인터를 nullptr로 설정한다.
 	x->__children_[x->__size_]=nullptr;
 	x->__size_ = x->__size_-1;
 }
 
+//재분배와 merge에 사용할 형제를 골라낸다.
 template <class _NodePtr>
 int bestSibling(_NodePtr& __root, _NodePtr x, _NodePtr y){
-    (void)__root;//❗❗
+    (void)__root;
 	std::size_t i = 0;
     std::size_t index = 0;
 	
-	while(y->__children_[i]!=x)
+	while(y->__children_[i]!=x)// y노드의 몇번 째가 x인지 찾는다.
 	{
 		i++;
 	}
-	if( i==0 ){
+	if( i==0 ){ // 만약 왼쪽 맨 끝이라면 오른 쪽 형제를 택한다.
 		index = i+1;
-	}else if(i==y->__size_){
+	}else if(i==y->__size_){ // 오른 쪽 끝이라면 왼쪽 형제 택함.
 		index = i-1;
 	}else if(y->__children_[i-1]->__size_ >= y->__children_[i+1]->__size_){
-		index = i-1;
+		index = i-1; // 왼쪽 형제가 더 크거나 같으면 왼쪽 선택
 	}else{
-		index = i+1;
+		index = i+1; //오른 쪽 선택
 	}
 
 	return index;
 }
+//  형제 노드에서 key를 가져와 재분배한다.
 template <class _NodePtr, class _Tp, std::size_t M>
 void redistribute(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSiblingIndex){
 
@@ -361,18 +373,18 @@ void redistribute(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibl
 	while(y->__children_[i]!=x){
 		i++;
 	}
-	_NodePtr bestNode = y->__children_[bestSiblingIndex];
+	_NodePtr bestNode = y->__children_[bestSiblingIndex];//선택된 형제 노드
 
 
-	if(bestSiblingIndex< static_cast<std::size_t>(i) ){ //❗❗
+	if(bestSiblingIndex< static_cast<std::size_t>(i) ){ // 왼쪽에 형제가 있을 때
 		_Tp lastKey = bestNode->__keys_[bestNode->__size_-1];
-		insertKey<_NodePtr, _Tp, M>(__root, x, (_NodePtr)nullptr, y->__keys_[i-1]);//❗❗
-		x->__children_[1]=x->__children_[0]; //❗❗❗넣어야하나?
-		x->__children_[0]=bestNode->__children_[bestNode->__size_];
-		bestNode->__children_[bestNode->__size_]=nullptr;
-		deleteKey<_NodePtr, _Tp, M>(__root, bestNode, lastKey);
-		y->__keys_[i-1]=lastKey;
-	}else{
+		insertKey<_NodePtr, _Tp, M>(__root, x, (_NodePtr)nullptr, y->__keys_[i-1]);//부모의 키를 x에 삽입한다.
+		x->__children_[1]=x->__children_[0]; // x의 기존 자식 포인터를 오른쪽으로 한 칸 이동.
+		x->__children_[0]=bestNode->__children_[bestNode->__size_];// 왼쪽 형제의 마지막 child를 x의 첫 child로 가져온다.
+		bestNode->__children_[bestNode->__size_]=nullptr;// 형제의 child를 이동했으므로 빈 자리 nullptr로 초기화한다.
+		deleteKey<_NodePtr, _Tp, M>(__root, bestNode, lastKey);// 형제 노드에서 마지막 key를 삭제한다.
+		y->__keys_[i-1]=lastKey;// 부모 키를 교체한다.
+	}else{ // 오른쪽에 형제가 있을 때
 		_Tp firstKey = bestNode->__keys_[0];
 		insertKey<_NodePtr, _Tp, M>(__root, x, (_NodePtr)nullptr, y->__keys_[i]);
 		x->__children_[x->__size_]=bestNode->__children_[0];
@@ -381,21 +393,21 @@ void redistribute(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibl
 		y->__keys_[i]=firstKey;
 	}
 }
+//x와 형제 노드를 합친다.
 template <class _NodePtr, class _Tp, std::size_t M>
 void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSiblingIndex){
 
 	std::size_t i = 0;
-	while(y->__children_[i]!=x){
+	while(y->__children_[i]!=x){// x의 위치를 부모에서 찾는다.
 		i++;
 	}
     
 
-	_NodePtr bestNode = y->__children_[bestSiblingIndex];
+	_NodePtr bestNode = y->__children_[bestSiblingIndex];// 병합 되는 형제 노드
 
 
 
-	if(bestSiblingIndex>static_cast<std::size_t>(i)){ //❗❗❗
-		// x <-> bestNode 교환
+	if(bestSiblingIndex>static_cast<std::size_t>(i)){ //형제노드가 오른쪽이라면 x와 위치를 바꾼다.
         _NodePtr tempNode = x;
         x = bestNode;
         bestNode = tempNode;
@@ -408,14 +420,13 @@ void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibling
     
 
 
-    //오른쪽 sibling 을 x에다가 넣는 코드
-
+    //부모 키 값을 형제 노드에 가져온다 이후 merge를 한다.
 	bestNode->__keys_[bestNode->__size_] = y->__keys_[i-1];
 	bestNode->__size_ = bestNode->__size_+1;
 	std::size_t j = 0;
 
 
-	while(j<x->__size_){
+	while(j<x->__size_){ // x의 키 값들이 형제노드에 merge된다.
 		bestNode->__keys_[bestNode->__size_] = x->__keys_[j];
 		bestNode->__children_[bestNode->__size_] = x->__children_[j];
 		bestNode->__size_ = bestNode->__size_+1;
@@ -423,35 +434,37 @@ void mergeNode(_NodePtr& __root, _NodePtr x, _NodePtr y, std::size_t bestSibling
 	}
 	bestNode->__children_[bestNode->__size_] = x->__children_[x->__size_];
     
-
+	// 부모에서 가져온 key 없앰
 	deleteKey<_NodePtr, _Tp, M>(__root, y, y->__keys_[i-1]);
 
 
-    // x 실제 삭제
+    // 기존 x노드 삭제
     delete x;
 }
 
 
 template <class _NodePtr, class _Tp, std::size_t M>
-const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
+const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) {
 
-		// 수정2
+		// 루트가 없다면 삭제 x
 		if(__root == nullptr){
 			return nullptr;
 		}
-
+		// 삭제 대상 키 값을 찾고 경로를 pathStack에 저장한다.
 	std::pair<std::stack<_NodePtr>, bool> searchPathResult = searchPath<_NodePtr, _Tp, M>(__root, __key);
 	std::stack<_NodePtr> pathStack = searchPathResult.first;
 	bool searchValue = searchPathResult.second;
 
 	if(searchValue==false){
         
-        return nullptr;
+        return nullptr; // 삭제할 키가 없음
     }
+	//삭제할 노드를 x에 저장
 	_NodePtr x = pathStack.top();
 	_NodePtr y = nullptr;
- 	pathStack.pop(); //❗❗수정?
+ 	pathStack.pop(); 
 
+	// 해당 노드가 터미널인지 확인
 	bool keyInTerminal = true;
 	for(size_t i=0; i<x->__size_+1; i++){
 		if(x->__children_[i] != nullptr){
@@ -460,29 +473,31 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 		}
 	}
 
-    // 여기서 문제 발생!!
-	if(!keyInTerminal){
+    
+	if(!keyInTerminal){ // 삭제 노드가 내부 노드면 오른쪽 subtree의 가장 작은 키값과 교환한다.
         
 		_NodePtr internalNode = x;
 		size_t index = 0;
-		for(size_t i=0; i<x->__size_; i++){
+		for(size_t i=0; i<x->__size_; i++){ // 삭제할 노드 찾기
 			if(x->__keys_[i] == __key){
 				index = i;
-				break; //수정3
+				break; 
 			}
 	    }
 
         pathStack.push(x);
 
-        std::pair<std::stack<_NodePtr>, bool> searchPathResult2 = searchPath<_NodePtr, _Tp, M>(x->__children_[index+1], x->__keys_[index]);
+        std::pair<std::stack<_NodePtr>, bool> searchPathResult2 = searchPath<_NodePtr, _Tp, M>(x->__children_[index+1], x->__keys_[index]);//삭제 노드를 찾기 위해 subtree를 탐색한다.
 		std::stack<_NodePtr> pathStack2 = searchPathResult2.first;
 		std::stack<_NodePtr> tmpStack;
+
+		// 삭제할 경로를 정상 순서로 만들어 기존 pathStack 뒤에 이어 붙여 준다.
 		while(!pathStack2.empty()){
 			_NodePtr value =pathStack2.top();
 			pathStack2.pop(); 
 			tmpStack.push(value);
 		}
-
+		
 		while(!tmpStack.empty()){
 			_NodePtr value =tmpStack.top();
 			tmpStack.pop(); 
@@ -491,47 +506,46 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 
 		x = pathStack.top();
 		pathStack.pop();
-		//❗❗수정??
+		// 내부 노드 삭제를 위해 key값  자리를 바꾼다.
 		_Tp tempKey = internalNode->__keys_[index];
 		internalNode->__keys_[index] = x->__keys_[0];
 		x->__keys_[0]=tempKey;
-	} // pathStack은 leafNode까지의 경로
+	} 
 	
 	
  
 	
 	bool finished = false;
 
-
+	// 실제 key값을 없앤다.
 	deleteKey<_NodePtr, _Tp, M>(__root, x, __key);
 
-	// 수정4
+	// 루트가 비워졌다면 트리를 완전히 삭제한다.
+	// 성공을 나타내기 위해 nullptr이 이 아닌 임의의 값 1을 반환한다.
 	if(x == __root && x->__size_ == 0){
 		delete __root;
 		__root = nullptr;
-		return (const Node<_Tp>*)1; // ✅ 삭제 성공을 나타내는 더미 값 (nullptr이 아닌 값)
+		return (const Node<_Tp>*)1; // 삭제 성공을 나타내는 더미 (nullptr이 아닌 값)
 	}
 
-	if(!pathStack.empty()){
+	if(!pathStack.empty()){// 부모 노드
 		y = pathStack.top();
 		pathStack.pop();
 	}
 
-	do{
-		if(x==__root || x->__size_ >= 1){ // isRoot 함수 적용해야하나???? // ❗❗하드 코딩 됨
+	do{ 
+		if(x==__root || x->__size_ >= (M-1)/2){ 
 			finished = true;
-		}else{
-			std::size_t bestSiblingIndex = bestSibling(__root, x, y); //❗❗
-			// x: underflow 발생한 노드
-			// y: x의 부모 노드
-			// bestSibling: x 형제 노드의 인덱스
-
-			if(y->__children_[bestSiblingIndex]->__size_ > 1)// ❗❗하드 코딩 됨
+		}else{// 형제 노드 선택
+			std::size_t bestSiblingIndex = bestSibling(__root, x, y); 
+			
+			// 형제 노드가 여유가 있으면 키를 가져온다.
+			if(y->__children_[bestSiblingIndex]->__size_ >(M-1)/2)// 하드코딩
 			{
 				redistribute<_NodePtr, _Tp, M>(__root, x, y, bestSiblingIndex);
 				finished=true;
 			}
-			else{
+			else{// 형제도 부족하면 병합
 				mergeNode<_NodePtr, _Tp, M>(__root, x, y, bestSiblingIndex);
 				x=y;
 				if(!pathStack.empty()){
@@ -542,17 +556,12 @@ const Node<_Tp>* __eraseBT(_NodePtr& __root, const _Tp& __key) { //❗❗
 				}
 			}
 		}
-	}while(!finished); // 수정1
+	}while(!finished); // 마지막에 루트가 비어 있으면 자식을 새 루트로 바꿔 준다.
 
-	/*
-	if(y != nullptr && y->__size_ == 0) {
-    __root = y->__children_[0];
-    delete y;
-}*/
 		if(__root != nullptr && __root->__size_ == 0){
 		_NodePtr oldRoot = __root;
-		__root = __root->__children_[0];  // child를 새 root로
-		delete oldRoot;                    // old root 해제
+		__root = __root->__children_[0];  
+		delete oldRoot;                    
 	}
 
 	return __root;
@@ -584,12 +593,12 @@ class BT {
 	public: // Modifier
 		std::pair<const_pointer, bool> insert(const key_type& key) {
 			// use __insertBT or write your own code here
-			return __insertBT<pointer, key_type, M>(__root_, key);//❗❗❗
+			return __insertBT<pointer, key_type, M>(__root_, key);
 		}
 
 		const_pointer erase(const key_type& key) {
 			// use __eraseBT or write your own code here
-			return __eraseBT<pointer, key_type, M>(__root_, key);//❗❗❗
+			return __eraseBT<pointer, key_type, M>(__root_, key);
 		}
 
 		void clear() {
