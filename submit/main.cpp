@@ -19,26 +19,26 @@ template <class _Tp, std::size_t M> class BT;
 */
 template <class _Tp, std::size_t M = 4>
 class Node {
-	private: // Member types
+	private: // 노드의 멤버 타입
 		typedef _Tp					__key_type;
 		typedef Node<__key_type>*	__node_pointer;
 		typedef std::size_t			size_type;
 	
-	public: // Member variables
+	public: // 멤버 변수
 		__key_type		__keys_[M - 1];
 		__node_pointer	__children_[M];
 		size_type		__size_;
 	
-	public: // Constructor //❗❗
-		// ✅ 기본 생성자 (필수)
-    Node() {
+	public: // 기본 생성자
+		
+    Node() { //처음 생성할 때 자식 포인터의 값을 다 nullptr로 초기화 한다.
         __size_ = 0;
         for (size_type i = 0; i < M; i++)
             __children_[i] = nullptr;
     }
 
-    // ✅ 키 기반 생성자 (단 하나만 존재해야 함)
-    explicit Node(const __key_type& key) {
+    // Node에 키를 포함해서 생성한다.
+    Node(const __key_type& key) {
         __size_ = 0;
         for (size_type i = 0; i < M; i++)
             __children_[i] = nullptr;
