@@ -45,7 +45,7 @@ class Node {
         __push_front(key, nullptr);
     }
 
-	public: // Modifier
+	public: // 노드에 key값을 한개 와 자식 포인터를 넣는다
 		void __push_front(const __key_type& __key, const __node_pointer& __np) {
 			__children_[__size_ + 1] = __children_[__size_];
 			for (size_type __i = __size_; 0 < __i; --__i) {
@@ -56,12 +56,14 @@ class Node {
 			__children_[0] = __np;
 			++size();
 		}
+		// 노드의 맨 뒤에 key와 자식 포인터를 넣는다.
 		void __push_back(const __key_type& __key, const __node_pointer& __np) {
 			__keys_[size()] = __key;
 			__children_[size() + 1] = __np;
 			++size();
 		}
-		__key_type __pop_front() {//❗❗수정
+		// 노드의 맨 앞 key를 제거하고 반환한다.
+		__key_type __pop_front() {//노드에 키 갑
 			const __key_type __ret = __keys_[0];
 			
 			for (size_type __i = 0; __i < __size_ - 1; ++__i) {
@@ -72,10 +74,10 @@ class Node {
 			--size();
 
 			return __ret;
-		}
+		}// 노드의 맨 뒤 key를 제거하고 반환한다.
 		__key_type __pop_back() { return __keys_[--size()]; }
 
-	public: // Capacity
+	public: // 노드 사이즈를 반환한다. 여기서 사이즈란 key의 개수이다.
 		size_type& size() { return __size_; }
 		const size_type& size() const { return __size_; }
 
@@ -113,28 +115,34 @@ class Node {
 * PDF에 명시되어있는 출력 형식에 유의하세요.
 * ❗️잘못된 출력 형식은 0점 처리됩니다.❗️
 */
+
+// 트리를 중위 순회 순으로 출력한다. 
 template <class _NodePtr>
 void __inorder(_NodePtr __x) {
+	// 노드가 없으면 출력하지 않는다.
 	if (__x == nullptr || __x->size() == 0) {
 		return ;
 	}
 
 	std::cout << '<';
+	// 오쪽 자식을 출력한다. 
 	std::cout << __x->__children_[0] << ' ';
+	// key와 key의 오른쪽 자식을 출력한다.
 	for (std::size_t __i = 0; __i < __x->size() - 1; __i++) {
 		std::cout << __x->__keys_[__i] << ' ';
 		if (__x->__children_[__i + 1] != nullptr) {
 			std::cout << __x->__children_[__i + 1] << ' ';
 		}
 	}
+	//마지막 키와 자식을 출력한다.
 	std::cout << __x->__keys_[__x->size() - 1] << ' ';
 	std::cout << __x->__children_[__x->size()];
 	std::cout << '>';
 
-	return ; // ❗❗수정함
+	return ; 
 }
 
-// Dangling pointer를 방지하기 위해 __x를 참조 타입으로 받도록 설계하였습니다.
+// 트리 삭제는 중위 순회로 재귀 방식으로 진행한다.
 template <class _NodePtr>
 void __clear(_NodePtr& __x) {
 	if (__x == nullptr) {
@@ -144,48 +152,52 @@ void __clear(_NodePtr& __x) {
 	for (std::size_t __i = 0; __i <= __x->size(); __i++) {
 		__clear(__x->__children_[__i]);
 	}
+	// 노드 삭제
 	delete __x;
 	__x = nullptr;
 }
+
+// 루트부터 시작해서 key를 찾고 탐색 경로를 stack으로 반환한다.
 template <class _NodePtr, class _Tp, std::size_t M>
 std::pair<std::stack<_NodePtr>, bool> searchPath(_NodePtr& __root, const _Tp& __key){
 	_NodePtr x = __root;
 	std::stack<_NodePtr> path;
 	std::size_t i = 0;
-	// x = __root 가 nullptr인 경우는 없음
-	do{ //❗❗ while - do로 바꿔야할수도 있음
+	
+	do{ 
 		i=0;
-		while( i<=x->__size_-1 && __key>x->__keys_[i])
+		while( i<=x->__size_-1 && __key>x->__keys_[i]) //노드에서 key가 삽입할 위치를 탐색한다.
 		{
 			i++;
 		}
-		if( i<= x->__size_-1 && __key==x->__keys_[i]){
+		if( i<= x->__size_-1 && __key==x->__keys_[i]){//key를 찾으면 탐색 경로를 반환한다.
 			path.push(x);
 			return std::pair<std::stack<_NodePtr>, bool>(path,  true);
 
 		}
-
+		//경로에 노드 넣기
 		path.push(x);
 
-		
+		// key가 있는 자식 노드로 이동한다.
 		x=x->__children_[i];
 
 	} while(x!=nullptr);
-
+	// key를 찾지 못한 경우
 	return std::pair<std::stack<_NodePtr>, bool>(path,  false);
 }
 
+// x에 key값을 삽입한다.
 template <class _NodePtr, class _Tp, std::size_t M>
 void insertKey(_NodePtr& __root, _NodePtr x, _NodePtr y, _Tp __key){
-    (void)__root;//❗❗❗
-// y : 전 단계에서 분할한 노드 (첫 단계에서는 null)
-	int i = x->__size_-1; // key의 인덱스 값: 최대 1
+    
+	int i = x->__size_-1; 
+	// 삽입 위치를 아래와 같이 기존 key를 오른쪽으로 이동하면서 찾는다.
 	while(i>=0 && __key<x->__keys_[i]){
 		x->__keys_[i+1]=x->__keys_[i];
 		x->__children_[i+2]=x->__children_[i+1];
 		i--;
 	}
-
+	//새 키와 키의 오른 쪽 자식을 넣고 사이즈를 1 증가한다.
 	x->__keys_[i+1]=__key;
 	x->__children_[i+2]= y;
 	x->__size_=x->__size_+1;
